@@ -842,7 +842,7 @@ class Waiter(object):
     # This is a list of async jobs
     while True:
       try:
-        pid, status = posix.wait()
+        pid, status = posix.waitpid(-1, posix.WUNTRACED)
       except OSError as e:
         #log('wait() error: %s', e)
         if e.errno == errno.ECHILD:
