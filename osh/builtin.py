@@ -29,6 +29,7 @@ from __future__ import print_function
 import posix
 import signal
 import sys
+import termios
 
 from _devbuild.gen import osh_help  # generated file
 from _devbuild.gen.runtime_asdl import (
@@ -486,6 +487,7 @@ READ_SPEC = _Register('read')
 READ_SPEC.ShortFlag('-r')
 READ_SPEC.ShortFlag('-n', args.Int)
 READ_SPEC.ShortFlag('-a', args.Str)  # name of array to read into
+READ_SPEC.ShortFlag('-s')
 
 
 # sys.stdin.readline() in Python has buffering!  TODO: Rewrite this tight loop
@@ -509,6 +511,14 @@ def Read(argv, splitter, mem):
   arg, i = READ_SPEC.Parse(argv)
 
   names = argv[i:]
+
+  if arg.s:
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    new = list(old)
+    new[3] &= ~termios.ECHO
+    termios.tcsetattr(fd, termios.TCSADRAIN, new)
+
   if arg.n is not None:  # read a certain number of bytes
     try:
       name = names[0]
@@ -566,6 +576,9 @@ def Read(argv, splitter, mem):
         s = ''  # if there are too many variables
       #log('read: %s = %s', names[i], s)
       state.SetStringDynamic(mem, names[i], s)
+
+  if arg.s:
+    termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
   return status
 
