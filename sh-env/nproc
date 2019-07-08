@@ -1,2 +1,6 @@
 #!/bin/sh
-sysctl -n hw.ncpu
+if [ -x nproc ]
+	nproc
+else
+	sysctl -n hw.ncpu
+fi

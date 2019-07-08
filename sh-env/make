@@ -1,2 +1,19 @@
 #!/bin/sh
-gmake "$@"
+# assume that gmake is always GNU make
+if [ -x gmake ]; then
+	gmake "$@"
+# we have to do feature detection
+else
+	TMP=${TMPDIR:-/tmp}
+	cat << EOF > "$TMP/test-makefile"
+SOME_VAR := \$(shell echo hi)
+all:
+	echo "\$(SOME_VAR)"
+EOF
+	[ "$(make -s -f "$TMP/test-makefile")" = hi ] || {
+		echo "gmake not installed and system make not compatible with GNU make."
+		exit 1
+	}
+	make "$@"
+fi
+
